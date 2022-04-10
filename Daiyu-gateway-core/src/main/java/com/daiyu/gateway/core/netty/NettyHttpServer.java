@@ -4,6 +4,7 @@ import com.daiyu.common.util.RemotingHelper;
 import com.daiyu.common.util.RemotingUtil;
 import com.daiyu.gateway.core.DaiyuGatewayConfig;
 import com.daiyu.gateway.core.LifeCycle;
+import com.daiyu.gateway.core.netty.processor.NettyProcessor;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
@@ -46,8 +47,11 @@ public class NettyHttpServer implements LifeCycle {
 
     private EventLoopGroup eventLoopGroupWork;
 
-    public NettyHttpServer(DaiyuGatewayConfig daiyuGatewayConfig) {
+    private NettyProcessor nettyProcessor;
+
+    public NettyHttpServer(DaiyuGatewayConfig daiyuGatewayConfig, NettyProcessor nettyProcessor) {
         this.daiyuGatewayConfig = daiyuGatewayConfig;
+        this.nettyProcessor=nettyProcessor;
         if (daiyuGatewayConfig.getPort() > 0 && daiyuGatewayConfig.getPort() < 65535) {
             this.port = daiyuGatewayConfig.getPort();
         }
@@ -102,7 +106,7 @@ public class NettyHttpServer implements LifeCycle {
                                         new HttpObjectAggregator(daiyuGatewayConfig.getMacContentLength()),
                                         new HttpServerExpectContinueHandler(),
                                         new NettyServerConnectManagerHandler(),
-                                        new NettyHttpServerHandler());
+                                        new NettyHttpServerHandler(nettyProcessor));
                     }
                 });
         //判断是否需要内存分配
@@ -126,6 +130,10 @@ public class NettyHttpServer implements LifeCycle {
         if (eventLoopGroupWork != null) {
             eventLoopGroupWork.shutdownGracefully();
         }
+    }
+
+    public EventLoopGroup getEventLoopGroupWork() {
+        return eventLoopGroupWork;
     }
 
     /**

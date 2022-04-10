@@ -51,11 +51,29 @@ public class DaiyuGatewayConfig {
     private boolean whenComplete = true;
 
     //网关队列缓冲模式
-    private String bufferType = DaiyuBufferHelper.FLUSHER;
+//    private String bufferType = DaiyuBufferHelper.FLUSHER;
+    private String bufferType = "";
 
     //网关队列：阻塞/等待策略
     private String waitStrategy = "blocking";
 
     //TODO：带配置完成
+//	连接超时时间
+    private int httpConnectTimeout = 30 * 1000;
+
+    //	请求超时时间
+    private int httpRequestTimeout = 30 * 1000;
+
+    //	客户端请求重试次数
+    private int httpMaxRequestRetry = 2;
+
+    //	客户端请求最大连接数
+    private int httpMaxConnections = 10000;
+
+    //	客户端每个地址支持的最大连接数
+    private int httpConnectionsPerHost = 8000;
+
+    //	客户端空闲连接超时时间, 默认60秒
+    private int httpPooledConnectionIdleTimeout = 60 * 1000;
 
 }
