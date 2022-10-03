@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventFactory;
+import com.lmax.disruptor.EventTranslatorOneArg;
 import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.SequenceBarrier;
@@ -31,7 +32,10 @@ public class ParallelFlusher<E> implements Flusher<E> {
 
     private ExecutorService executorService;
 
+    private EventTranslatorOneArg<Holder, E> eventTranslator;
+
     public ParallelFlusher(Builder<E> builder) {
+        this.eventTranslator = new HolderEventTranslator();
         this.executorService = Executors.newFixedThreadPool(builder.threads, new ThreadFactoryBuilder().setNameFormat("ParallelFlusher-" + builder.namePreFix + "-pool-%d").build());
         this.eventListener = builder.listener;
         RingBuffer<Holder> ringBuffer = RingBuffer.create(builder.producerType, new HolderEventFactory(), builder.bufferSize, builder.waitStrategy);
@@ -52,24 +56,68 @@ public class ParallelFlusher<E> implements Flusher<E> {
 
     }
 
-    @Override
-    public void add(E event) {
+    private static <E> void process(EventListener<E> listener, Throwable e, E event) {
+        listener.onException(e, -1, event);
+    }
 
+    private static <E> void process(EventListener<E> listener, Throwable e, E... events) {
+        for (E event : events) {
+            listener.onException(e, -1, event);
+        }
     }
 
     @Override
-    public void add(E... event) {
+    public void add(E event) {
+        final RingBuffer<Holder> temp = ringBuffer;
+        if (ringBuffer == null) {
+            process(this.eventListener, new IllegalStateException("ParallelFlusher is closed"), event);
+            return;
+        }
+        try {
+            ringBuffer.publishEvent(this.eventTranslator, event);
+        } catch (NullPointerException e) {
+            process(this.eventListener, new IllegalStateException("ParallelFlusher is closed"), event);
+        }
+    }
 
+    @Override
+    public void add(E... events) {
+        final RingBuffer<Holder> temp = ringBuffer;
+        if (ringBuffer == null) {
+            process(this.eventListener, new IllegalStateException("ParallelFlusher is closed"), events);
+            return;
+        }
+        try {
+            ringBuffer.publishEvents(this.eventTranslator, events);
+        } catch (NullPointerException e) {
+            process(this.eventListener, new IllegalStateException("ParallelFlusher is closed"), events);
+        }
     }
 
     @Override
     public boolean tryAdd(E event) {
-        return false;
+        final RingBuffer<Holder> temp = ringBuffer;
+        if (ringBuffer == null) {
+            return false;
+        }
+        try {
+            return ringBuffer.tryPublishEvent(this.eventTranslator, event);
+        } catch (NullPointerException e) {
+            return false;
+        }
     }
 
     @Override
-    public boolean tryAdd(E... event) {
-        return false;
+    public boolean tryAdd(E... events) {
+        final RingBuffer<Holder> temp = ringBuffer;
+        if (ringBuffer == null) {
+            return false;
+        }
+        try {
+            return ringBuffer.tryPublishEvents(this.eventTranslator, events);
+        } catch (NullPointerException e) {
+            return false;
+        }
     }
 
     @Override
@@ -164,7 +212,7 @@ public class ParallelFlusher<E> implements Flusher<E> {
     private class Holder {
         private E event;
 
-        private void setEvent(E event) {
+        private void setValue(E event) {
             this.event = event;
         }
 
@@ -187,7 +235,7 @@ public class ParallelFlusher<E> implements Flusher<E> {
         @Override
         public void onEvent(Holder event) throws Exception {
             eventListener.onEvent(event.event);
-            event.setEvent(null);
+            event.setValue(null);
         }
     }
 
@@ -213,6 +261,14 @@ public class ParallelFlusher<E> implements Flusher<E> {
         @Override
         public void handleOnShutdownException(Throwable ex) {
             throw new UnsupportedOperationException(ex);
+        }
+    }
+
+    private class HolderEventTranslator implements EventTranslatorOneArg<Holder, E> {
+
+        @Override
+        public void translateTo(Holder holder, long sequence, E event) {
+            holder.setValue(event);
         }
     }
 }
