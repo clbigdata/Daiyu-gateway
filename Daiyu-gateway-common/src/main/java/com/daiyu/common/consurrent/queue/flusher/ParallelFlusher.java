@@ -145,7 +145,7 @@ public class ParallelFlusher<E> implements Flusher<E> {
         }
     }
 
-    private interface EventListener<E> {
+    public interface EventListener<E> {
         void onEvent(E event) throws Exception;
 
         void onException(Throwable throwable, long sequence, E event);
@@ -195,7 +195,7 @@ public class ParallelFlusher<E> implements Flusher<E> {
             return this;
         }
 
-        public Builder<E> setListener(EventListener<E> listener) {
+        public Builder<E> setEventListener(EventListener<E> listener) {
             Preconditions.checkNotNull(listener);
             this.listener = listener;
             return this;

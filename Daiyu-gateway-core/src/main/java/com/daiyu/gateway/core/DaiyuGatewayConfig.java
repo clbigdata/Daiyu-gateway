@@ -3,6 +3,11 @@ package com.daiyu.gateway.core;
 import com.daiyu.common.constants.BasicConst;
 import com.daiyu.common.constants.DaiyuBufferHelper;
 import com.daiyu.common.util.NetUtils;
+import com.lmax.disruptor.BlockingWaitStrategy;
+import com.lmax.disruptor.BusySpinWaitStrategy;
+import com.lmax.disruptor.SleepingWaitStrategy;
+import com.lmax.disruptor.WaitStrategy;
+import com.lmax.disruptor.YieldingWaitStrategy;
 import lombok.Data;
 
 /**
@@ -50,12 +55,29 @@ public class DaiyuGatewayConfig {
 
     private boolean whenComplete = true;
 
+    private int bufferSize = 1024 * 16;
+
     //网关队列缓冲模式
 //    private String bufferType = DaiyuBufferHelper.FLUSHER;
     private String bufferType = "";
 
     //网关队列：阻塞/等待策略
     private String waitStrategy = "blocking";
+
+    public WaitStrategy getATrueWaitStrategy() {
+        switch (waitStrategy) {
+            case "blocking":
+                return new BlockingWaitStrategy();
+            case "busySpin":
+                return new BusySpinWaitStrategy();
+            case "yielding":
+                return new YieldingWaitStrategy();
+            case "sleeping":
+                return new SleepingWaitStrategy();
+            default:
+                return new BlockingWaitStrategy();
+        }
+    }
 
     //TODO：带配置完成
 //	连接超时时间
