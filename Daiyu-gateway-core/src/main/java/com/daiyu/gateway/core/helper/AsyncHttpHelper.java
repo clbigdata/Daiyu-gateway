@@ -4,7 +4,6 @@ import org.asynchttpclient.AsyncHandler;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.ListenableFuture;
 import org.asynchttpclient.Request;
-import org.asynchttpclient.Response;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -32,8 +31,8 @@ public class AsyncHttpHelper {
         this.asyncHttpClient = asyncHttpClient;
     }
 
-    public <T>CompletableFuture<T> executeRequest(Request request, AsyncHandler<T> handler) {
-        ListenableFuture<T> future = asyncHttpClient.executeRequest(request,handler);
+    public <T> CompletableFuture<T> executeRequest(Request request, AsyncHandler<T> handler) {
+        ListenableFuture<T> future = asyncHttpClient.executeRequest(request, handler);
         return future.toCompletableFuture();
     }
 }
