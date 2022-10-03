@@ -38,7 +38,7 @@ public class DaiyuContainer implements LifeCycle {
         if (DaiyuBufferHelper.isFlusher(bufferType)) {
             nettyProcessor = new NettyBatchEventProcessor(gatewayConfig, nettyCoreProcessor);
         } else if (DaiyuBufferHelper.isMpmc(bufferType)) {
-            nettyProcessor = new NettyMpmcProcessor(gatewayConfig, nettyCoreProcessor);
+            nettyProcessor = new NettyMpmcProcessor(gatewayConfig, nettyCoreProcessor,false);
         } else {
             nettyProcessor = nettyCoreProcessor;
         }

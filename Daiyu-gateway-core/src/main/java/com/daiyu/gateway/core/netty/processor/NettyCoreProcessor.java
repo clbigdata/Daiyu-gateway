@@ -18,7 +18,7 @@ public class NettyCoreProcessor implements NettyProcessor {
         FullHttpRequest fullHttpRequest = event.getFullHttpRequest();
         try {
             //1。解析FullHttpRequest，把他们转换为我们自己想要的内部对象：Context
-            System.err.println("接收到http请求");
+            System.err.println("--接收到http请求--");
         } catch (Throwable t) {
 
         }

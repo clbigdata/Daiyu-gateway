@@ -26,7 +26,7 @@ public class DaiyuGatewayConfig {
     private String gatewayId = NetUtils.getLocalIp() + BasicConst.COLON_SEPARATOR + port;
 
     //网关的注册中心
-    private String registerAddress = "";
+    private String registerAddress = DaiyuBufferHelper.FLUSHER;
 
     //网关的命名空间：dev test prod
     private String nameSpace = "daiyu-dev";
@@ -58,8 +58,8 @@ public class DaiyuGatewayConfig {
     private int bufferSize = 1024 * 16;
 
     //网关队列缓冲模式
-//    private String bufferType = DaiyuBufferHelper.FLUSHER;
-    private String bufferType = "";
+    private String bufferType = DaiyuBufferHelper.MPMC;
+//    private String bufferType = "";
 
     //网关队列：阻塞/等待策略
     private String waitStrategy = "blocking";
